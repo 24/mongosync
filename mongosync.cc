@@ -476,7 +476,7 @@ int MongoSync::GetAllCollByVersion(mongo::DBClientConnection* conn, std::string 
 			if (mongoutils::str::endsWith(coll.c_str(), ".system.namespaces") 
 					|| mongoutils::str::endsWith(coll.c_str(), ".system.users") 
 					|| mongoutils::str::endsWith(coll.c_str(), ".system.indexes")
-                    || mongoutils::str::endsWith(coll.c_str(), ".$_id_")) {
+          || coll.substr(coll.rfind("."), 2) == ".$") {
 				continue;
 			}
 			colls.push_back(coll.substr(coll.find(".")+1));

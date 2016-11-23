@@ -210,37 +210,41 @@ void MongoSync::GenericProcessOplog(OplogProcessOp op) {
 	} else if (!opt_.db.empty() && !opt_.coll.empty()) {
 		NamespaceString ns(opt_.db, opt_.coll);
 		query = mongo::Query(BSON("$or" << BSON_ARRAY(BSON("ns" << ns.ns()) << BSON("ns" << ns.db() + ".system.indexes") << BSON("ns" << ns.db() + ".system.$cmd"))
-															<< "ts" << mongo::GTE << oplog_begin_.timestamp() << mongo::LTE << oplog_finish_.timestamp()));
+					<< "ts" << mongo::GTE << oplog_begin_.timestamp() << mongo::LTE << oplog_finish_.timestamp()));
 	}
 	std::auto_ptr<mongo::DBClientCursor> cursor = src_conn_->query(oplog_ns_, query, 0, 0, NULL, mongo::QueryOption_CursorTailable | mongo::QueryOption_AwaitData);
-    std::string dst_db, dst_coll;
-    if (need_clone_oplog()) {
-	    NamespaceString ns(opt_.dst_oplog_ns);
-	    dst_db = ns.db(),
-        dst_coll = ns.coll(); 
-    } else {
-        dst_db = opt_.dst_db;
-        dst_coll = opt_.dst_coll; 
-    }
+	std::string dst_db, dst_coll;
+	if (need_clone_oplog()) {
+		NamespaceString ns(opt_.dst_oplog_ns);
+		dst_db = ns.db(),
+					 dst_coll = ns.coll(); 
+	} else {
+		dst_db = opt_.dst_db;
+		dst_coll = opt_.dst_coll; 
+	}
 	mongo::BSONObj oplog;	
 	OplogTime cur_times;
 	while (true) {
 		while (!cursor->more()) {
+			if (!before(cur_times, oplog_finish_)) {
+				std::cerr << std::endl;
+				return;
+			}
 			sleep(1);
 		}
 		oplog = cursor->next();	
 		ProcessSingleOplog(opt_.db, opt_.coll, dst_db, dst_coll, oplog.getOwned(), op);
 		memcpy(&cur_times, oplog["ts"].value(), 2*sizeof(int32_t));	
-        std::cerr << "\rProgress sync to timestamp: " << cur_times.sec << "," << cur_times.no << "       ";
-		if (!before(cur_times, oplog_finish_)) {
-			break;
-		}
-		if (*reinterpret_cast<uint64_t*>(&oplog_finish_) != static_cast<uint64_t>(-1LL)) {
-			break;	
-		}
+		std::cerr << "\rProgress sync to timestamp: " << cur_times.sec << "," << cur_times.no << "       ";
+//			if (!before(cur_times, oplog_finish_)) {
+//				break;
+//			}
+//			if (*reinterpret_cast<uint64_t*>(&oplog_finish_) != static_cast<uint64_t>(-1LL)) {
+//				break;	
+//			}
 	}
-  std::cerr << std::endl;
-	
+	std::cerr << std::endl;
+
 }
 
 void MongoSync::CloneDb() {

@@ -206,7 +206,7 @@ void MongoSync::SyncOplog() {
 void MongoSync::GenericProcessOplog(OplogProcessOp op) {
 	mongo::Query query;	
 	if (!opt_.db.empty() && opt_.coll.empty()) {
-		query = mongo::Query(BSON("ns" << BSON("$regex" << ("^"+opt_.db)) << "ts" << mongo::GT << oplog_begin_.timestamp() << mongo::LTE << oplog_finish_.timestamp())); //TODO: this cannot exact out the opt_.db related oplog, but the opt_.db-prefixed related oplog
+		query = mongo::Query(BSON("ns" << BSON("$regex" << ("^"+opt_.db)) << "ts" << mongo::GTE << oplog_begin_.timestamp() << mongo::LTE << oplog_finish_.timestamp())); //TODO: this cannot exact out the opt_.db related oplog, but the opt_.db-prefixed related oplog
 	} else if (!opt_.db.empty() && !opt_.coll.empty()) {
 		NamespaceString ns(opt_.db, opt_.coll);
 		query = mongo::Query(BSON("$or" << BSON_ARRAY(BSON("ns" << ns.ns()) << BSON("ns" << ns.db() + ".system.indexes") << BSON("ns" << ns.db() + ".system.$cmd"))
@@ -239,7 +239,7 @@ void MongoSync::GenericProcessOplog(OplogProcessOp op) {
 			break;	
 		}
 	}
-    std::cerr << std::endl;
+  std::cerr << std::endl;
 	
 }
 
@@ -302,8 +302,8 @@ void MongoSync::CloneCollIndex(std::string sns, std::string dns) {
 	}
 	int32_t indexes_num = indexes.nFields(), idx = 0;
 	mongo::BSONElement element;
-	mongo::BSONObjBuilder builder;
 	while (idx < indexes_num) {
+		mongo::BSONObjBuilder builder;
 		mongo::BSONObjIterator i(indexes.getObjectField(util::Int2Str(idx++)));
 		std::string field_name;
 		while (i.more()) {
@@ -331,7 +331,7 @@ void MongoSync::ProcessSingleOplog(const std::string& db, const std::string& col
 	}
 	std::string dns = dst_db + "." + dst_coll;
 	if (op == kClone) {
-		dst_conn_->insert(dns, oplog);
+		dst_conn_->insert(dns, oplog, 0, &mongo::WriteConcern::unacknowledged);
 		return;
 	}
 
@@ -369,7 +369,7 @@ void MongoSync::ApplyInsertOplog(const std::string& dst_db, const std::string& d
 	std::string dns = dst_db + "." + dst_coll;
 	if (ns.size() < sizeof(".system.indexes")
 			|| ns.substr(ns.size()-sizeof(".system.indexes")+1) != ".system.indexes") { //not index-ceating oplog
-		dst_conn_->insert(dns, obj);
+		dst_conn_->insert(dns, obj, 0, &mongo::WriteConcern::unacknowledged);
 		return;
 	}
 	
@@ -501,7 +501,7 @@ int MongoSync::GetCollIndexesByVersion(mongo::DBClientConnection* conn, std::str
 	} else if (version_header == "2.4." || version == "2.6.") {
 		std::auto_ptr<mongo::DBClientCursor> cursor;
 		mongo::BSONArrayBuilder array_builder;
-		cursor = conn->query(ns.db() + ".systems.indexes",mongo::Query(BSON("ns" << coll_full_name)), 0, 0, 0, mongo::QueryOption_SlaveOk | mongo::QueryOption_NoCursorTimeout);
+		cursor = conn->query(ns.db() + ".system.indexes",mongo::Query(BSON("ns" << coll_full_name)), 0, 0, 0, mongo::QueryOption_SlaveOk | mongo::QueryOption_NoCursorTimeout);
 		if (cursor.get() == NULL) {
 			std::cerr << coll_full_name << " get indexes failed" << std::endl;
 			return -1;
@@ -525,7 +525,7 @@ void MongoSync::SetCollIndexesByVersion(mongo::DBClientConnection* conn, std::st
 		mongo::BSONObj tmp;
 		conn->runCommand(ns.db(), BSON("createIndexes" << ns.coll() << "indexes" << BSON_ARRAY(index)), tmp);
 	} else if (version_header == "2.4." || version_header == "2.6.") {
-		conn->insert(ns.db() + ".system.indexes", index);	
+		conn->insert(ns.db() + ".system.indexes", index, 0, &mongo::WriteConcern::unacknowledged);	
 	} else {
 		std::cerr << "version: " << version << " is not surpported" << std::endl;
 		exit(-1);

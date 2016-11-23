@@ -327,12 +327,17 @@ void MongoSync::CloneCollIndex(std::string sns, std::string dns) {
 
 void MongoSync::ProcessSingleOplog(const std::string& db, const std::string& coll, std::string& dst_db, std::string& dst_coll, const mongo::BSONObj& oplog, OplogProcessOp op) {
     std::string oplog_ns = oplog.getStringField("ns");	
-	if (!db.empty()) {
-		std::string sns = db + "." + (coll.empty() ? "" : coll);
+	if (!db.empty() && coll.empty()) {
+		std::string sns = db + ".";
 		if (oplog_ns.size() < sns.size() || oplog_ns.substr(0, sns.size()) != sns) {
 			return;
 		}
 	}
+	
+	if (mongo::str::endsWith(oplog_ns.c_str(), ".system.indexes")) {
+		return;
+	}
+
 	std::string dns = dst_db + "." + dst_coll;
 	if (op == kClone) {
 		dst_conn_->insert(dns, oplog, 0, &mongo::WriteConcern::unacknowledged);

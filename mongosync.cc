@@ -235,7 +235,8 @@ void MongoSync::GenericProcessOplog(OplogProcessOp op) {
 		oplog = cursor->next();	
 		ProcessSingleOplog(opt_.db, opt_.coll, dst_db, dst_coll, oplog.getOwned(), op);
 		memcpy(&cur_times, oplog["ts"].value(), 2*sizeof(int32_t));	
-		std::cerr << "\rProgress sync to timestamp: " << cur_times.sec << "," << cur_times.no << "       ";
+		std::cerr << "\rProgress sync to timestamp: " << cur_times.sec << "," << cur_times.no << "       "; // just for printing better
+		std::cerr << "\rProgress sync to timestamp: " << cur_times.sec << "," << cur_times.no;
 //			if (!before(cur_times, oplog_finish_)) {
 //				break;
 //			}
@@ -284,6 +285,7 @@ void MongoSync::CloneColl(std::string src_ns, std::string dst_ns, int batch_size
 			percent = cnt * 100 / total;
 			marks.assign(percent, '#');
 			blanks.assign(105-percent, ' ');
+			std::cerr << "\rProgress  " << marks << blanks << percent << "%,  elapsed time: " << time(NULL)-st << "s              ";	
 			std::cerr << "\rProgress  " << marks << blanks << percent << "%,  elapsed time: " << time(NULL)-st << "s";	
 		}
 	}

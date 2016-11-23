@@ -546,7 +546,7 @@ int MongoSync::GetCollIndexesByVersion(mongo::DBClientConnection* conn, std::str
 			std::cerr << coll_full_name << " get indexes failed" << std::endl;
 			return -1;
 		}
-		indexes = tmp.getObjectField("cursor").getObjectField("firstBatch");
+		indexes = tmp.getObjectField("cursor").getObjectField("firstBatch").getOwned();
 	} else if (version_header == "2.4." || version == "2.6.") {
 		std::auto_ptr<mongo::DBClientCursor> cursor;
 		mongo::BSONArrayBuilder array_builder;

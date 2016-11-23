@@ -335,7 +335,13 @@ void MongoSync::ProcessSingleOplog(const std::string& db, const std::string& col
 	}
 	
 	if (mongo::str::endsWith(oplog_ns.c_str(), ".system.indexes")) {
-		return;
+		if (opt_.no_index) {
+			return;
+		}
+		std::string op_ns = oplog.getObjectField("o").getStringField("ns");
+		if (!opt_.coll.empty() && NamespaceString(op_ns).coll() != opt_.coll) {
+			return;
+		}
 	}
 
 	std::string dns = dst_db + "." + dst_coll;
@@ -382,6 +388,9 @@ void MongoSync::ApplyInsertOplog(const std::string& dst_db, const std::string& d
 		return;
 	}
 	
+	if (dst_coll == "system.indexes") {
+		dns = dst_db + "." + NamespaceString(obj.getStringField("ns")).coll(); // the collection name is system.indexes, needs modified
+	}
 	mongo::BSONObjBuilder build;
 	mongo::BSONObjIterator iter(obj);
 	mongo::BSONElement ele;

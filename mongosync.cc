@@ -50,8 +50,18 @@ static void Usage() {
 	std::cerr << "--use_mcr                force use MONGODB-CR password machenism" << std::endl;
 }
 
+#define CHECK_ARGS_NUM() \
+	if (argc <= idx + 1) { \
+		std::cerr << "Wrong argument number" << std::endl; \
+		Usage(); \
+		exit(-1);	\
+	} \
+	while(0)
+
 void ParseOptions(int argc, char** argv, Options* opt) {
-	int32_t idx = 1;
+	int32_t idx = 0;
+	CHECK_ARGS_NUM();
+	++idx;
 	std::string time_str;
 	int32_t commas_pos;
 	while (idx < argc) {
@@ -59,50 +69,67 @@ void ParseOptions(int argc, char** argv, Options* opt) {
 			Usage();
 			exit(0);
 		} else if (strcasecmp(argv[idx], "--src_srv") == 0) {
+			CHECK_ARGS_NUM();
 			opt->src_ip_port = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--src_user") == 0) {
+			CHECK_ARGS_NUM();
 			opt->src_user = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--src_passwd") == 0) {
+			CHECK_ARGS_NUM();
 			opt->src_passwd = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--src_auth_db") == 0) {
+			CHECK_ARGS_NUM();
 			opt->src_auth_db = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_srv") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_ip_port = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_user") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_user = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_passwd") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_passwd = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_auth_db") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_auth_db = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_srv") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_ip_port = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--db") == 0) {
+			CHECK_ARGS_NUM();
 			opt->db = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_db") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_db = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--coll") == 0) {
+			CHECK_ARGS_NUM();
 			opt->coll = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--dst_coll") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_coll = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--oplog") == 0) {
 			opt->oplog = true;
 		} else if (strcasecmp(argv[idx], "--raw_oplog") == 0) {
 			opt->raw_oplog = true;
 		} else if (strcasecmp(argv[idx], "--op_start") == 0) {
+			CHECK_ARGS_NUM();
 			time_str = argv[++idx];
 			commas_pos = time_str.find(",");
 			opt->oplog_start.sec = atoi(time_str.substr(0, commas_pos).c_str());
 			opt->oplog_start.no = atoi(time_str.substr(commas_pos+1).c_str());
 		} else if (strcasecmp(argv[idx], "--op_end") == 0) {
+			CHECK_ARGS_NUM();
 			time_str = argv[++idx];
 			commas_pos = time_str.find(",");
 			opt->oplog_end.sec = atoi(time_str.substr(0, commas_pos).c_str());
 			opt->oplog_end.no = atoi(time_str.substr(commas_pos+1).c_str());
 		} else if (strcasecmp(argv[idx], "--dst_op_ns") == 0) {
+			CHECK_ARGS_NUM();
 			opt->dst_oplog_ns = argv[++idx];
 		} else if (strcasecmp(argv[idx], "--no_index") == 0) {
 			opt->no_index = true;
 		} else if (strcasecmp(argv[idx], "--filter") == 0) {
+			CHECK_ARGS_NUM();
 			opt->filter = mongo::Query(argv[++idx]);
 		} else if (strcasecmp(argv[idx], "--use_mcr") == 0) {
 			opt->use_mcr = true;

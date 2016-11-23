@@ -171,7 +171,10 @@ mongo::DBClientConnection* MongoSync::ConnectAndAuth(std::string srv_ip_port, st
 
 void MongoSync::Process() {
 	oplog_begin_ = opt_.oplog_start;
-	if (opt_.oplog_start.empty()) {
+	if ((need_clone_db() || need_clone_coll()) && opt_.oplog_start.empty()) {
+//		oplog_begin_ = GetSideOplogTime(src_conn_, oplog_ns_, opt_.db, opt_.coll, false);
+		oplog_begin_ = GetSideOplogTime(src_conn_, oplog_ns_, "", "", false);
+	} else if (opt_.oplog_start.empty()) {
 		oplog_begin_ = GetSideOplogTime(src_conn_, oplog_ns_, opt_.db, opt_.coll, true);
 	}
 	oplog_finish_ = opt_.oplog_end;
@@ -180,9 +183,7 @@ void MongoSync::Process() {
 		CloneOplog();
 		return;
 	}
-	if ((need_clone_db() || need_clone_coll()) && opt_.oplog_start.empty()) {
-		oplog_begin_ = GetSideOplogTime(src_conn_, oplog_ns_, opt_.db, opt_.coll, false);
-	}
+
 	if (need_clone_db()) {
 		CloneDb();
 	} else if (need_clone_coll()) {
@@ -190,6 +191,7 @@ void MongoSync::Process() {
 		std::string dns = (opt_.dst_db.empty() ? opt_.db : opt_.dst_db) + "." + (opt_.dst_coll.empty() ? opt_.coll : opt_.dst_coll);
 		CloneColl(sns, dns);
 	}
+
 	if (need_sync_oplog()) {
 		SyncOplog();
 	}

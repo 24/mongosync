@@ -325,7 +325,7 @@ void MongoSync::CloneCollIndex(std::string sns, std::string dns) {
 	std::cerr << "\rclone " << sns << " indexes success" << std::endl;
 }
 
-void MongoSync::ProcessSingleOplog(const std::string& db, const std::string& coll, std::string& dst_db, std::string& dst_coll, const mongo::BSONObj& oplog, OplogProcessOp op) {
+void MongoSync::ProcessSingleOplog(const std::string& db, const std::string& coll, std::string dst_db, std::string dst_coll, const mongo::BSONObj& oplog, const OplogProcessOp op) {
     std::string oplog_ns = oplog.getStringField("ns");	
 	if (!db.empty() && coll.empty()) {
 		std::string sns = db + ".";

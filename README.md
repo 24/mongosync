@@ -1,14 +1,14 @@
 # README
 
-## 1.Introduction 
+## 1. Introduction 
 
 This simpe program is for transfering data between two mongo nodes, including:
 
 * data cloning;
-* oplog syncing(applying one mongo databbase's oplog to another mongo database) ;
+* oplog syncing(applying one mongo database's oplog to another mongo database) ;
 * oplog cloning(not applying, just storing the oplogs from source mongo database to another one)
 
-## 2.Usage
+## 2. Usage
 
 * Get the source code
 
@@ -21,24 +21,25 @@ This simpe program is for transfering data between two mongo nodes, including:
   Enter the source code and typewrite:
 
   ```shell
+  $ cd mongosync
+  $ git checkout accelerate
   $ make
   ```
 
-  after that, a "mongosync" named execution file appears in the $(MONGOSYNC_ROOT)/output directory, and also a "mongosync.conf" named config file
+  After that, a "mongosync" named execution file appears in the $(MONGOSYNC_ROOT)/output directory, and also a "mongosync.conf" named config file there.
 
-  *SP:**
+  **SP:**
 
-  a. maybe some depenncies not installed in your machine, install them according to the tips（mostly boost libarary is needed）
+  a. Maybe some depenncies not installed in your machine, install them according to the tips（mostly boost and ssl libararies is needed）
 
-  b. don't use c++11 to compile this program, otherwise will occur error
+  b. Don't use c++11 to compile this program, otherwise errors will occur
 
 * Exectution
 
-  The program can launches with command line or config file，and the specified usage can be obtained by:
+  The program can launch in command-line mode or with a config file，and the specified usage can be obtained by using '--help' option:
 
   ```shell
-  $ cd output
-  $ ./mongosync --help
+  $ output/mongosync --help
   Follow is the mongosync-surpported options:
   --help                   to get the help message
   -c conf.file             use config file to start mongosync
@@ -63,13 +64,14 @@ This simpe program is for transfering data between two mongo nodes, including:
   --dst_op_ns arg          the destination namespace for raw oplog mode
   --no_index               whether to clone the db or collection corresponding index
   --filter arg             the bson format string used to filter the records to be transfered
+  --bg_num arg             the background thread number for cloning data(not oplog syncing and oplog storing)
   ```
 
-## 3.Performance
+## 3. Performance
 
 Rough testing under the situation:
 
-* Ping from this program's exectution's machine to the mongo db server's machine(two machines) is about **1.5ms**；
+* Ping from this program's exectution's machine to the mongo db server's machines(two machines) are all about **1.5ms**；
 * total about **36,400,000** documents；
 * database size about **1.09GB**
 
